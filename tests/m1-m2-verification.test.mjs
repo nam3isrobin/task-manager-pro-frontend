@@ -1,20 +1,8 @@
 import assert from 'node:assert';
-import { getInitialMockTasks, getInitialMockUsers, getInitialMockNotifications } from '../src/mock/mockData.js';
-import {
-  isMockEnabled,
-  setMockEnabled,
-  mockLogin,
-  mockRegister,
-  mockGetTasks,
-  mockCreateTask,
-  mockUpdateTask,
-  mockDeleteTask,
-  mockUploadAttachment,
-  mockGetUsers,
-  mockGetNotifications,
-  resetMockData,
-} from '../src/mock/mockService.js';
-import { getAccessToken, setAccessToken, clearAccessToken, hasAccessToken } from '../src/utils/tokenStorage.js';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { getAccessToken, setAccessToken, clearAccessToken, hasAccessToken, subscribeToToken } from '../src/utils/tokenStorage.js';
 import { sanitizeErrorMessage } from '../src/utils/errorSanitizer.js';
 import {
   MAX_NAME_LENGTH,
@@ -31,89 +19,39 @@ import {
   isSafeUrl,
   isAllowedFileType,
   isAllowedFileSize,
+  sanitizeString,
 } from '../src/utils/validation.js';
 
-console.log('--- Starting Milestone 1 & 2 Verification Suite ---');
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const rootDir = path.resolve(__dirname, '..');
 
-// 1. Verify Mock Data Seeds
-console.log('1. Verifying Mock Data Seeds...');
-const tasks = getInitialMockTasks();
-const users = getInitialMockUsers();
-const notifs = getInitialMockNotifications();
+console.log('--- Starting Milestone 1 & 2 Verification Suite (Production Clean) ---');
 
-assert(tasks.length >= 8, `Expected at least 8 tasks, got ${tasks.length}`);
-assert(users.length >= 4, `Expected at least 4 users, got ${users.length}`);
-assert(notifs.length >= 3, `Expected at least 3 notifications, got ${notifs.length}`);
+// 1. Verify Elimination of Mock Subsystem
+console.log('1. Verifying Zero Mock Subsystems in Production Files...');
+assert(!fs.existsSync(path.join(rootDir, 'src/mock')), 'src/mock directory MUST be completely eliminated');
 
-// Verify all 4 statuses are represented
-const statuses = new Set(tasks.map((t) => t.status));
-assert(statuses.has('Todo'), 'Missing Todo status');
-assert(statuses.has('In Progress'), 'Missing In Progress status');
-assert(statuses.has('Completed'), 'Missing Completed status');
-assert(statuses.has('On Hold'), 'Missing On Hold status');
-console.log('  ✓ All 4 statuses present:', Array.from(statuses));
+const apiCode = fs.readFileSync(path.join(rootDir, 'src/services/api.js'), 'utf-8');
+assert(!apiCode.includes('mockService'), 'api.js must NOT import mockService');
+assert(!apiCode.includes('isMockEnabled'), 'api.js must NOT contain isMockEnabled check');
+assert(!apiCode.includes('config.adapter'), 'api.js must NOT hijack config.adapter with mock responses');
+assert(
+  apiCode.includes('VITE_API_URL') &&
+    (apiCode.includes('http://localhost:5000/api') || apiCode.includes('task-manager-pro-backend')),
+  'api.js must point to real backend baseURL'
+);
+assert(apiCode.includes('Authorization = `Bearer ${token}`'), 'api.js must inject Bearer token into Authorization header');
+console.log('  ✓ api.js clean production Axios instance verified');
 
-// Verify all 4 priorities are represented
-const priorities = new Set(tasks.map((t) => t.priority));
-assert(priorities.has('Low'), 'Missing Low priority');
-assert(priorities.has('Medium'), 'Missing Medium priority');
-assert(priorities.has('High'), 'Missing High priority');
-assert(priorities.has('Urgent'), 'Missing Urgent priority');
-console.log('  ✓ All 4 priorities present:', Array.from(priorities));
+const authCode = fs.readFileSync(path.join(rootDir, 'src/context/AuthContext.jsx'), 'utf-8');
+assert(!authCode.includes('mockService'), 'AuthContext must NOT import mockService');
+assert(!authCode.includes('isDemo'), 'AuthContext must NOT export isDemo');
+assert(!authCode.includes('enableDemoMode'), 'AuthContext must NOT export enableDemoMode');
+console.log('  ✓ AuthContext clean production auth verified');
 
-// 2. Verify Mock Service Mode and Persistence
-console.log('2. Verifying Mock Service Operations...');
-setMockEnabled(true);
-assert.strictEqual(isMockEnabled(), true, 'Mock mode should be enabled');
-
-// Test Mock Auth
-const loginRes = await mockLogin('sarah.jenkins@taskmanagerpro.dev', 'password123');
-assert(loginRes.success, 'Mock login failed');
-assert(loginRes.data.token.startsWith('mock-jwt-'), 'Mock token invalid format');
-assert.strictEqual(loginRes.data.email, 'sarah.jenkins@taskmanagerpro.dev');
-console.log('  ✓ Mock login verified');
-
-// Test Mock Register
-const regRes = await mockRegister('New Engineer', 'new.engineer@test.com', 'SecurePass123!');
-assert(regRes.success, 'Mock register failed');
-assert.strictEqual(regRes.data.role, 'user', 'Mock register MUST strictly default to role: user');
-console.log('  ✓ Mock register strictly assigns user role');
-
-// Test Mock Task Filtering & Search
-const allTasksRes = await mockGetTasks();
-assert(allTasksRes.data.length >= 8, 'Failed to fetch all mock tasks');
-
-const urgentTasksRes = await mockGetTasks({ priority: 'Urgent' });
-assert(urgentTasksRes.data.every((t) => t.priority === 'Urgent'), 'Priority filter failed');
-
-const inProgressRes = await mockGetTasks({ status: 'In Progress' });
-assert(inProgressRes.data.every((t) => t.status === 'In Progress'), 'Status filter failed');
-
-const searchRes = await mockGetTasks({ search: 'Kubernetes' });
-assert(searchRes.data.length >= 1, 'Search filter failed');
-console.log('  ✓ Mock task filtering & search verified');
-
-// Test Mock Task CRUD
-const createdTaskRes = await mockCreateTask({
-  title: 'Test Verification Task',
-  description: 'Testing mock creation pipeline',
-  status: 'Todo',
-  priority: 'High',
-  tags: ['test', 'ci'],
-});
-assert(createdTaskRes.success, 'Mock task creation failed');
-const createdId = createdTaskRes.data._id;
-assert(createdId, 'Mock task ID missing');
-
-const updateRes = await mockUpdateTask(createdId, { status: 'Completed' });
-assert.strictEqual(updateRes.data.status, 'Completed', 'Mock task update failed');
-
-const deleteRes = await mockDeleteTask(createdId);
-assert(deleteRes.success, 'Mock task delete failed');
-console.log('  ✓ Mock task CRUD operations verified');
-
-// 3. Verify Token Storage
-console.log('3. Verifying In-Memory Token Storage...');
+// 2. Verify In-Memory Token Storage (OWASP A07 & XSS Defense)
+console.log('2. Verifying In-Memory Token Storage...');
 clearAccessToken();
 assert.strictEqual(getAccessToken(), null, 'Token should initially be null');
 assert.strictEqual(hasAccessToken(), false, 'hasAccessToken should be false');
@@ -122,12 +60,22 @@ setAccessToken('secure-in-memory-token-xyz');
 assert.strictEqual(getAccessToken(), 'secure-in-memory-token-xyz', 'Token getter mismatch');
 assert.strictEqual(hasAccessToken(), true, 'hasAccessToken should be true');
 
+// Reactive subscription testing
+let notifiedToken = null;
+const unsubscribe = subscribeToToken((token) => {
+  notifiedToken = token;
+});
+setAccessToken('updated-token-123');
+assert.strictEqual(notifiedToken, 'updated-token-123', 'Subscriber should receive updated token');
+unsubscribe();
+
 clearAccessToken();
 assert.strictEqual(getAccessToken(), null, 'Token should be null after clear');
-console.log('  ✓ In-memory token storage operations verified');
+assert.strictEqual(hasAccessToken(), false, 'hasAccessToken should be false after clear');
+console.log('  ✓ In-memory token storage operations and subscriptions verified');
 
-// 4. Verify Error Sanitizer
-console.log('4. Verifying Error Sanitizer...');
+// 3. Verify Error Sanitizer (OWASP A05 Information Leakage Defense)
+console.log('3. Verifying Error Sanitizer...');
 const rawStackError = new Error('Database error at User.find (/var/www/server/models/User.js:45:12)');
 const sanitized = sanitizeErrorMessage(rawStackError);
 assert(!sanitized.includes('/var/www/'), 'Sanitizer failed to strip file paths');
@@ -145,10 +93,16 @@ assert.strictEqual(sanitizeErrorMessage(axiosError), 'Invalid credentials provid
 const objectCrashError = { details: { code: 500 } };
 const safeOutput = sanitizeErrorMessage(objectCrashError);
 assert.strictEqual(typeof safeOutput, 'string', 'Sanitizer must always return string');
-console.log('  ✓ Error sanitizer verified against stack leakage and object crashes');
 
-// 5. Verify Validation Constraints & Helpers
-console.log('5. Verifying Validation Constraints & Helpers...');
+const mongoErr = 'MongoError: E11000 duplicate key error on index: email';
+const sanitizedMongo = sanitizeErrorMessage(mongoErr);
+assert(!sanitizedMongo.includes('E11000'), 'Sanitizer must strip Mongo error codes');
+assert(!sanitizedMongo.includes('MongoError'), 'Sanitizer must strip MongoError');
+
+console.log('  ✓ Error sanitizer verified against stack leakage, DB errors, and object crashes');
+
+// 4. Verify Validation Constraints & Helpers
+console.log('4. Verifying Validation Constraints & Helpers...');
 assert.strictEqual(MAX_NAME_LENGTH, 70);
 assert.strictEqual(MAX_EMAIL_LENGTH, 254);
 assert.strictEqual(MAX_PASSWORD_LENGTH, 128);
@@ -176,6 +130,9 @@ assert.strictEqual(isAllowedFileType({ type: 'application/x-msdownload' }), fals
 
 assert.strictEqual(isAllowedFileSize({ size: 5 * 1024 * 1024 }), true);
 assert.strictEqual(isAllowedFileSize({ size: 15 * 1024 * 1024 }), false);
+
+assert.strictEqual(sanitizeString('   Clean Text   ', 50), 'Clean Text');
+assert.strictEqual(sanitizeString('1234567890', 5), '12345');
 
 console.log('  ✓ Validation constants, regex, XSS URL checks, and file constraints verified');
 

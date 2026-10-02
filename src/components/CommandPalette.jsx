@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, Kanban as Kanbans, Calendar, List, BarChart3, LogOut, CheckSquare, Zap, X } from 'lucide-react';
+import { Search, Plus, LayoutGrid, Kanban as Kanbans, Calendar, List, BarChart3, LogOut, CheckSquare, X } from 'lucide-react';
 
 export default function CommandPalette({
   isOpen,
@@ -9,8 +9,6 @@ export default function CommandPalette({
   onOpenCreateModal,
   onSwitchView,
   onOpenAnalytics,
-  onToggleDemo,
-  isDemo,
   onLogout
 }) {
   const [query, setQuery] = useState('');
@@ -40,7 +38,6 @@ export default function CommandPalette({
     { id: 'view-kanban', icon: Kanbans, title: 'Switch to Kanban Board', action: () => { onClose(); onSwitchView('kanban'); } },
     { id: 'view-calendar', icon: Calendar, title: 'Switch to Calendar View', action: () => { onClose(); onSwitchView('calendar'); } },
     { id: 'view-table', icon: List, title: 'Switch to Table View', action: () => { onClose(); onSwitchView('table'); } },
-    { id: 'demo', icon: Zap, title: isDemo ? 'Disable Demo Mode' : 'Enable Demo Mode', action: () => { onClose(); onToggleDemo(); } },
     { id: 'logout', icon: LogOut, title: 'Log Out', action: () => { onClose(); onLogout(); } },
   ];
 

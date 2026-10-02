@@ -17,24 +17,17 @@ import {
   isAllowedFileType,
   isAllowedFileSize,
 } from '../src/utils/validation.js';
-import {
-  isMockEnabled,
-  setMockEnabled,
-  mockLogin,
-  resetMockData,
-  mockGetTasks,
-} from '../src/mock/mockService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, '..');
 
-console.log('=== Starting Milestone 3 & Milestone 4 Verification Suite ===\n');
+console.log('=== Starting Milestone 3 & Milestone 4 Verification Suite (Production Clean) ===\n');
 
 // ----------------------------------------------------------------------------
 // 1. Milestone 3: Auth Pages Static Code & Feature Audit
 // ----------------------------------------------------------------------------
-console.log('1. Verifying Milestone 3 (Auth Pages UI/UX Polish)...');
+console.log('1. Verifying Milestone 3 (Auth Pages UI/UX Polish & Pure Production Auth)...');
 
 const loginCode = fs.readFileSync(path.join(rootDir, 'src/pages/LoginPage.jsx'), 'utf-8');
 const registerCode = fs.readFileSync(path.join(rootDir, 'src/pages/RegisterPage.jsx'), 'utf-8');
@@ -45,11 +38,12 @@ const resetCode = fs.readFileSync(path.join(rootDir, 'src/pages/ResetPasswordPag
 assert(loginCode.includes('showPassword'), 'LoginPage must support showPassword state');
 assert(loginCode.includes('Eye') && loginCode.includes('EyeOff'), 'LoginPage must include Eye and EyeOff icons');
 assert(loginCode.includes('animate-shake'), 'LoginPage must include animate-shake on error banner');
-assert(loginCode.includes('Explore in Demo Mode'), 'LoginPage must include "Explore in Demo Mode" button');
+assert(!loginCode.includes('Explore in Demo Mode'), 'LoginPage must NOT include "Explore in Demo Mode" button');
+assert(!loginCode.includes('handleDemoLogin'), 'LoginPage must NOT contain handleDemoLogin handler');
 assert(loginCode.includes('MAX_EMAIL_LENGTH'), 'LoginPage must enforce MAX_EMAIL_LENGTH');
 assert(loginCode.includes('MAX_PASSWORD_LENGTH'), 'LoginPage must enforce MAX_PASSWORD_LENGTH');
 assert(loginCode.includes('min-h-[44px]'), 'LoginPage must provide min 44px mobile touch targets');
-console.log('  ✓ LoginPage: Password toggle, error shake, demo CTA, maxLength limits & 44px touch targets verified');
+console.log('  ✓ LoginPage: Password toggle, error shake, zero demo bypass, maxLength limits & 44px touch targets verified');
 
 // 1.2 RegisterPage Assertions
 assert(registerCode.includes('showPassword'), 'RegisterPage must support showPassword state');
@@ -59,8 +53,10 @@ assert(registerCode.includes('MAX_EMAIL_LENGTH'), 'RegisterPage must enforce MAX
 assert(registerCode.includes('MAX_PASSWORD_LENGTH'), 'RegisterPage must enforce MAX_PASSWORD_LENGTH');
 assert(registerCode.includes('MIN_PASSWORD_LENGTH'), 'RegisterPage must enforce MIN_PASSWORD_LENGTH');
 assert(!registerCode.includes('<select') && !registerCode.includes('setRole'), 'RegisterPage must NOT have role selector');
+assert(!registerCode.includes('Try Demo Mode'), 'RegisterPage must NOT include "Try Demo Mode" button');
+assert(!registerCode.includes('handleDemoLogin'), 'RegisterPage must NOT contain handleDemoLogin handler');
 assert(registerCode.includes('hasMinLength') || registerCode.includes('Password strength') || registerCode.includes('At least 8 characters'), 'RegisterPage must include password helper');
-console.log('  ✓ RegisterPage: Zero role escalation, strength indicators, input limits, and password toggle verified');
+console.log('  ✓ RegisterPage: Zero role escalation, zero demo bypass, strength indicators, input limits, and password toggle verified');
 
 // 1.3 Forgot & Reset Password Pages Assertions
 assert(forgotCode.includes('animate-shake'), 'ForgotPasswordPage must include animate-shake on error');
@@ -111,7 +107,7 @@ console.log('  ✓ TaskCard: Hover elevation, priority accent bars, status pills
 // ----------------------------------------------------------------------------
 // 4. Milestone 4: DashboardPage Verification
 // ----------------------------------------------------------------------------
-console.log('\n4. Verifying Milestone 4 (DashboardPage UI/UX)...');
+console.log('\n4. Verifying Milestone 4 (DashboardPage UI/UX & Clean Production)...');
 
 const dashCode = fs.readFileSync(path.join(rootDir, 'src/pages/DashboardPage.jsx'), 'utf-8');
 
@@ -119,24 +115,32 @@ assert(dashCode.includes('totalTasks') && dashCode.includes('inProgressCount') &
 assert(dashCode.includes('grid-cols-1 md:grid-cols-2 lg:grid-cols-3'), 'Dashboard must use 3-column responsive task grid');
 assert(dashCode.includes('No tasks match your filters'), 'Dashboard must have filtered empty state');
 assert(dashCode.includes('No tasks created yet'), 'Dashboard must have zero-task workspace empty state');
-assert(dashCode.includes('Demo Mode Active') || dashCode.includes('isDemo'), 'Dashboard must show demo mode badge/indicator');
-assert(dashCode.includes('Reset Demo Data') || dashCode.includes('handleResetDemoData'), 'Dashboard must support Reset Demo Data action');
-console.log('  ✓ DashboardPage: Metric stat cards, 3-column grid, differentiated empty states & demo indicator verified');
+assert(!dashCode.includes('Demo Mode Active'), 'Dashboard must NOT show demo mode banner');
+assert(!dashCode.includes('Reset Demo Data'), 'Dashboard must NOT show Reset Demo Data action');
+assert(!dashCode.includes('handleResetDemoData'), 'Dashboard must NOT contain handleResetDemoData');
+console.log('  ✓ DashboardPage: Metric stat cards, 3-column grid, differentiated empty states & zero demo artifacts verified');
 
 // ----------------------------------------------------------------------------
-// 5. Milestone 4: Navbar, TaskModal, AttachmentUploader Verification
+// 5. Milestone 4: Navbar, TaskModal, AttachmentUploader, CommandPalette Verification
 // ----------------------------------------------------------------------------
-console.log('\n5. Verifying Milestone 4 (Navbar, TaskModal, AttachmentUploader, AssigneeSelector)...');
+console.log('\n5. Verifying Milestone 4 (Navbar, TaskModal, AttachmentUploader, CommandPalette)...');
 
 const navCode = fs.readFileSync(path.join(rootDir, 'src/components/Navbar.jsx'), 'utf-8');
 const modalCode = fs.readFileSync(path.join(rootDir, 'src/components/TaskModal.jsx'), 'utf-8');
 const uploaderCode = fs.readFileSync(path.join(rootDir, 'src/components/AttachmentUploader.jsx'), 'utf-8');
+const cmdCode = fs.readFileSync(path.join(rootDir, 'src/components/CommandPalette.jsx'), 'utf-8');
 
 // Navbar
 assert(navCode.includes('backdrop-blur'), 'Navbar must have backdrop-blur glass styling');
 assert(navCode.includes('getInitials') || navCode.includes('initials'), 'Navbar must render user avatar initials');
 assert(navCode.includes('roleStyles') || navCode.includes('userRole') || navCode.includes('role'), 'Navbar must render user role badge');
-console.log('  ✓ Navbar: Glassmorphic bar, profile initials avatar, role badge verified');
+assert(!navCode.includes('Demo'), 'Navbar must NOT render demo badge');
+console.log('  ✓ Navbar: Glassmorphic bar, profile initials avatar, role badge verified (zero demo badge)');
+
+// CommandPalette
+assert(!cmdCode.includes('onToggleDemo'), 'CommandPalette must NOT have onToggleDemo prop');
+assert(!cmdCode.includes('Enable Demo Mode'), 'CommandPalette must NOT have Enable Demo Mode action');
+console.log('  ✓ CommandPalette: Clean production command actions without demo mode toggles');
 
 // TaskModal
 assert(modalCode.includes('MAX_TASK_TITLE_LENGTH'), 'TaskModal must enforce MAX_TASK_TITLE_LENGTH');
@@ -165,27 +169,6 @@ assert(cssContent.includes('.animate-shake'), 'index.css must declare .animate-s
 assert(tailwindConfig.includes("'shake'") || tailwindConfig.includes('"shake"'), 'tailwind.config.js must include shake keyframe');
 assert(cssContent.includes('@keyframes fadeIn') || cssContent.includes('fade-in'), 'index.css must include fade-in animation');
 console.log('  ✓ CSS Tokens: @keyframes shake, .animate-shake, fadeIn animations verified');
-
-// ----------------------------------------------------------------------------
-// 7. Interactive Mock Demo Mode Reset Verification
-// ----------------------------------------------------------------------------
-console.log('\n7. Verifying Demo Mode Reset & Mock Service Functionality...');
-
-setMockEnabled(true);
-const initialTasks = await mockGetTasks();
-const originalCount = initialTasks.data.length;
-
-// Reset mock data
-const resetRes = resetMockData();
-assert(resetRes.tasks.length >= 8, 'resetMockData should restore all seeded tasks');
-
-const tasksAfterReset = await mockGetTasks();
-assert.strictEqual(tasksAfterReset.data.length, originalCount, 'Task count after reset must match initial count');
-
-const sarahLogin = await mockLogin('sarah.jenkins@taskmanagerpro.dev', 'demo1234');
-assert.strictEqual(sarahLogin.data.name, 'Sarah Jenkins');
-assert.strictEqual(sarahLogin.data.role, 'admin');
-console.log('  ✓ Mock reset and demo login verified successfully');
 
 console.log('\n===============================================================');
 console.log('=== ALL MILESTONE 3 & 4 VERIFICATIONS PASSED CLEANLY (100%) ===');

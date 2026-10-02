@@ -1,9 +1,8 @@
 import assert from 'node:assert';
 import api from '../src/services/api.js';
-import { setMockEnabled, isMockEnabled, resetMockData } from '../src/mock/mockService.js';
-import { getAccessToken, setAccessToken, clearAccessToken } from '../src/utils/tokenStorage.js';
+import { getAccessToken, setAccessToken, clearAccessToken, hasAccessToken } from '../src/utils/tokenStorage.js';
 
-console.log('=== CHALLENGER 1: AXIOS INTERCEPTOR & SESSION STORAGE ADVERSARIAL TEST ===\n');
+console.log('=== CHALLENGER 1: AXIOS INTERCEPTOR & SESSION STORAGE ADVERSARIAL TEST (PRODUCTION) ===\n');
 
 // Polyfill global sessionStorage and window for Node environment
 const mockStorage = new Map();
@@ -22,104 +21,78 @@ global.window = {
   },
 };
 
-// 1. Enable mock mode
-setMockEnabled(true);
-assert.strictEqual(isMockEnabled(), true, 'Mock mode should be active');
-assert.strictEqual(global.sessionStorage.getItem('demo_mode'), 'true', 'sessionStorage demo_mode should be true');
+// 1. Verify Axios Instance Defaults
+console.log('1. Verifying Axios Client Base Configuration...');
+assert(api.defaults.baseURL.includes('/api'), 'baseURL must point to /api endpoint');
+assert.strictEqual(api.defaults.headers['Content-Type'], 'application/json');
+console.log('  ✓ Axios baseURL and headers verified');
 
-// Reset mock data
-resetMockData();
+// 2. Test Request Interceptor Token Injection
+console.log('2. Verifying Request Interceptor Authorization Bearer Injection...');
+clearAccessToken();
 
-// 2. Test Axios mock adapter for Auth Login
-console.log('1. Testing api.post("/auth/login")...');
-const loginResponse = await api.post('/auth/login', {
-  email: 'sarah.jenkins@taskmanagerpro.dev',
-  password: 'password123',
-});
-assert.strictEqual(loginResponse.status, 200);
-assert.strictEqual(loginResponse.data.success, true);
-assert(loginResponse.data.data.token.startsWith('mock-jwt-'));
-assert.strictEqual(loginResponse.data.data.email, 'sarah.jenkins@taskmanagerpro.dev');
-console.log('  ✓ api.post("/auth/login") handled via mock adapter');
+// Simulate request interceptor without token
+let testConfig = { headers: {} };
+const requestInterceptor = api.interceptors.request.handlers[0].fulfilled;
+let processedConfig = await requestInterceptor(testConfig);
+assert.strictEqual(processedConfig.headers.Authorization, undefined, 'No auth header when token is null');
 
-// Set token in memory
-setAccessToken(loginResponse.data.data.token);
+// Simulate request interceptor with token
+setAccessToken('secure-jwt-test-token-777');
+testConfig = { headers: {} };
+processedConfig = await requestInterceptor(testConfig);
+assert.strictEqual(processedConfig.headers.Authorization, 'Bearer secure-jwt-test-token-777', 'Must inject Bearer token');
+console.log('  ✓ Request interceptor successfully injects Bearer token into config.headers');
 
-// 3. Test Axios mock adapter for GET /tasks
-console.log('2. Testing api.get("/tasks")...');
-const tasksResponse = await api.get('/tasks');
-assert.strictEqual(tasksResponse.status, 200);
-assert.strictEqual(tasksResponse.data.success, true);
-assert(tasksResponse.data.data.length >= 8);
-console.log('  ✓ api.get("/tasks") returned 8+ tasks');
+// 3. Test Response Interceptor 401 Handling
+console.log('3. Verifying Response Interceptor 401 Unauthorized Handling...');
+global.sessionStorage.setItem('taskmanager_auth_user_v1', JSON.stringify({ name: 'Test User' }));
+assert(hasAccessToken(), 'Token should be present before 401');
 
-// 4. Test Axios mock adapter for POST /tasks
-console.log('3. Testing api.post("/tasks")...');
-const createResponse = await api.post('/tasks', {
-  title: 'Axios Mock Interceptor Task',
-  description: 'Testing through axios client',
-  status: 'In Progress',
-  priority: 'Urgent',
-  tags: ['integration', 'axios'],
-});
-assert.strictEqual(createResponse.status, 200);
-assert.strictEqual(createResponse.data.success, true);
-const createdId = createResponse.data.data._id;
-assert(createdId.startsWith('tsk-'));
-console.log('  ✓ api.post("/tasks") created task with ID:', createdId);
+const responseErrorHandler = api.interceptors.response.handlers[0].rejected;
+const error401 = {
+  response: {
+    status: 401,
+    data: { error: 'Unauthorized token expired' },
+  },
+};
 
-// 5. Test Axios mock adapter for PUT /tasks/:id
-console.log('4. Testing api.put(`/tasks/${createdId}`)...');
-const updateResponse = await api.put(`/tasks/${createdId}`, {
-  status: 'Completed',
-});
-assert.strictEqual(updateResponse.status, 200);
-assert.strictEqual(updateResponse.data.data.status, 'Completed');
-console.log('  ✓ api.put("/tasks/:id") updated status');
-
-// 6. Test Axios mock adapter for DELETE /tasks/:id
-console.log('5. Testing api.delete(`/tasks/${createdId}`)...');
-const deleteResponse = await api.delete(`/tasks/${createdId}`);
-assert.strictEqual(deleteResponse.status, 200);
-assert.strictEqual(deleteResponse.data.success, true);
-console.log('  ✓ api.delete("/tasks/:id") deleted task');
-
-// 7. Test Axios mock adapter error handling on non-existent task
-console.log('6. Testing api error handling on non-existent task ID...');
-let axiosErrorCaught = false;
 try {
-  await api.delete('/tasks/tsk-non-existent-12345');
-} catch (err) {
-  axiosErrorCaught = true;
-  assert.strictEqual(err.response?.status, 400);
-  assert.strictEqual(err.response?.data?.error, 'Task not found');
+  await responseErrorHandler(error401);
+  assert.fail('401 error handler must reject error');
+} catch (rejectedErr) {
+  assert.strictEqual(rejectedErr.response?.status, 401);
 }
-assert.strictEqual(axiosErrorCaught, true, 'Non-existent task should reject with status 400');
-console.log('  ✓ Axios error response structure matched expected 400 Bad Request');
 
-// 8. Test Users and Notifications via Axios
-console.log('7. Testing api.get("/users") and api.get("/notifications")...');
-const usersRes = await api.get('/users');
-assert.strictEqual(usersRes.status, 200);
-assert(usersRes.data.data.length >= 4);
+// Token should be wiped
+assert.strictEqual(getAccessToken(), null, '401 interceptor must wipe in-memory access token');
+// Session storage should be cleared
+assert.strictEqual(global.sessionStorage.getItem('taskmanager_auth_user_v1'), null, '401 interceptor must clear session user');
+// Window location should be redirected to /login
+assert.strictEqual(global.window.location.href, '/login', '401 interceptor must redirect window to /login');
+console.log('  ✓ Response interceptor clears access token, wipes session storage, and redirects to /login');
 
-const notifsRes = await api.get('/notifications');
-assert.strictEqual(notifsRes.status, 200);
-assert(notifsRes.data.data.length >= 3);
+// 4. Test Response Interceptor Passing Normal Responses & Other Errors
+console.log('4. Verifying Response Interceptor Non-401 Passthrough...');
+const successResponseHandler = api.interceptors.response.handlers[0].fulfilled;
+const mock200Response = { status: 200, data: { success: true } };
+const passedResponse = successResponseHandler(mock200Response);
+assert.strictEqual(passedResponse.status, 200);
 
-const markAllRes = await api.patch('/notifications/read-all');
-assert.strictEqual(markAllRes.status, 200);
-assert.strictEqual(markAllRes.data.success, true);
-console.log('  ✓ Users and notifications endpoints verified via Axios');
-
-// 9. Test Corrupted SessionStorage resilience
-console.log('8. Testing corrupted sessionStorage handling...');
-global.sessionStorage.setItem('taskmanager_mock_tasks_v1', '{MALFORMED_JSON:::');
-const fallbackTasks = await api.get('/tasks');
-assert.strictEqual(fallbackTasks.status, 200);
-assert(fallbackTasks.data.data.length >= 8);
-console.log('  ✓ Gracefully recovered from corrupted sessionStorage');
+const error500 = {
+  response: {
+    status: 500,
+    data: { error: 'Internal server error' },
+  },
+};
+try {
+  await responseErrorHandler(error500);
+  assert.fail('500 error handler must reject error');
+} catch (rejectedErr) {
+  assert.strictEqual(rejectedErr.response?.status, 500);
+}
+console.log('  ✓ 200 OK and non-401 responses pass through as expected');
 
 console.log('\n===============================================================');
-console.log('=== AXIOS MOCK ADAPTER & STORAGE ADVERSARIAL TESTS PASSED!  ===');
+console.log('=== AXIOS INTERCEPTOR & STORAGE PRODUCTION TESTS PASSED!   ===');
 console.log('===============================================================');

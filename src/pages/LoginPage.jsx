@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Lock, Mail, AlertCircle, Loader2, CheckSquare, Eye, EyeOff, Zap } from 'lucide-react';
+import { Lock, Mail, AlertCircle, Loader2, CheckSquare, Eye, EyeOff } from 'lucide-react';
 import { MAX_EMAIL_LENGTH, MAX_PASSWORD_LENGTH, isValidEmail } from '../utils/validation';
 import { sanitizeErrorMessage } from '../utils/errorSanitizer';
 
@@ -11,8 +11,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [formError, setFormError] = useState('');
   const [errorShakeKey, setErrorShakeKey] = useState(0);
-  const [demoLoading, setDemoLoading] = useState(false);
-  const { login, loading, enableDemoMode } = useAuth();
+  const { login, loading } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -44,20 +43,6 @@ export default function LoginPage() {
     } catch (err) {
       setFormError(sanitizeErrorMessage(err, 'Login failed. Please try again.'));
       setErrorShakeKey((k) => k + 1);
-    }
-  };
-
-  const handleDemoLogin = async () => {
-    setFormError('');
-    setDemoLoading(true);
-    try {
-      await enableDemoMode();
-      navigate('/');
-    } catch (err) {
-      setFormError(sanitizeErrorMessage(err, 'Failed to launch demo mode.'));
-      setErrorShakeKey((k) => k + 1);
-    } finally {
-      setDemoLoading(false);
     }
   };
 
@@ -93,31 +78,6 @@ export default function LoginPage() {
               <span>{formError}</span>
             </div>
           )}
-
-          {/* Quick Demo Mode Bypass Action */}
-          <div className="mb-6">
-            <button
-              type="button"
-              onClick={handleDemoLogin}
-              disabled={demoLoading || loading}
-              className="w-full flex items-center justify-center min-h-[44px] py-2.5 px-4 rounded-xl text-sm font-semibold text-amber-300 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 hover:border-amber-500/50 shadow-sm transition-all duration-200 group active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1528]"
-            >
-              {demoLoading ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin text-amber-400" />
-              ) : (
-                <Zap className="w-4 h-4 mr-2 text-amber-400 group-hover:scale-110 transition-transform" />
-              )}
-              <span>Explore in Demo Mode</span>
-            </button>
-            <div className="relative my-5">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10" />
-              </div>
-              <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-[#0e162c] px-3 text-slate-500 font-medium">Or sign in with email</span>
-              </div>
-            </div>
-          </div>
 
           <form className="space-y-4 sm:space-y-5" onSubmit={handleSubmit} noValidate>
             <div>
@@ -181,7 +141,7 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={loading || demoLoading}
+              disabled={loading}
               className="w-full flex justify-center items-center min-h-[44px] py-3 px-4 rounded-xl text-sm font-semibold text-slate-900 bg-amber-500 hover:bg-amber-400 shadow-lg shadow-amber-500/25 disabled:opacity-50 transition-all active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0d1528]"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
@@ -204,4 +164,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

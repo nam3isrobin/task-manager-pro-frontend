@@ -14,7 +14,6 @@ import { useToast } from '../context/ToastContext';
 import { getTasks, createTask, updateTask, deleteTask } from '../services/taskService';
 import { sanitizeErrorMessage } from '../utils/errorSanitizer';
 import { useAuth } from '../context/AuthContext';
-import { resetMockData } from '../mock/mockService';
 import {
   Plus,
   CheckCircle,
@@ -22,7 +21,6 @@ import {
   AlertTriangle,
   Layers,
   Loader2,
-  Zap,
   RotateCcw,
   Search,
   Sparkles,
@@ -49,7 +47,6 @@ export default function DashboardPage() {
   const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0 });
   const [deleteTargetId, setDeleteTargetId] = useState(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [resetMessage, setResetMessage] = useState('');
 
   // View Switcher & Tooling states
   const [currentView, setCurrentView] = useState(() => {
@@ -63,7 +60,7 @@ export default function DashboardPage() {
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [isUserManagementOpen, setIsUserManagementOpen] = useState(false);
 
-  const { user, isDemo, disableDemoMode, enableDemoMode, logout } = useAuth();
+  const { user, logout } = useAuth();
   const toast = useToast();
 
   const handleViewChange = (view) => {
@@ -199,14 +196,6 @@ export default function DashboardPage() {
     }
   };
 
-  const handleResetDemoData = async () => {
-    resetMockData();
-    setResetMessage('Demo tasks reset to default seeds.');
-    setTimeout(() => setResetMessage(''), 3000);
-    fetchTasks();
-    toast.info('Demo Data Reset', 'Workspace tasks restored to default seed state.');
-  };
-
   // Stats calculations
   const totalTasks = tasks.length;
   const completedCount = tasks.filter((t) => t.status === 'Completed').length;
@@ -234,52 +223,6 @@ export default function DashboardPage() {
       <Navbar />
 
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {/* Demo Mode Notice Banner */}
-        {isDemo && (
-          <div className="mb-6 p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-amber-500/10 to-indigo-500/10 border border-amber-500/30 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-glass animate-fade-in">
-            <div className="flex items-center space-x-3">
-              <div className="p-2 rounded-xl bg-amber-500/20 text-amber-400">
-                <Zap className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-sm font-semibold text-amber-300">Demo Mode Active</span>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 font-mono">
-                    Offline Mock
-                  </span>
-                </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Full CRUD simulated in client memory. No backend server required.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-2 shrink-0 self-end sm:self-center">
-              <button
-                onClick={handleResetDemoData}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-500/40 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-400"
-                title="Reset tasks to initial seeded enterprise tasks"
-              >
-                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
-                Reset Demo Data
-              </button>
-              <button
-                onClick={disableDemoMode}
-                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/40"
-              >
-                Exit Demo
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* Reset Feedback Notification */}
-        {resetMessage && (
-          <div className="mb-6 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 rounded-xl p-3.5 text-xs sm:text-sm flex items-center animate-fade-in">
-            <CheckCircle className="w-4 h-4 mr-2 shrink-0" />
-            <span>{resetMessage}</span>
-          </div>
-        )}
-
         {/* Dashboard Header */}
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-8 gap-4">
           <div>
@@ -566,8 +509,6 @@ export default function DashboardPage() {
         onOpenCreateModal={() => handleOpenCreateModal()}
         onSwitchView={handleViewChange}
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
-        onToggleDemo={isDemo ? disableDemoMode : enableDemoMode}
-        isDemo={isDemo}
         onLogout={logout}
       />
 

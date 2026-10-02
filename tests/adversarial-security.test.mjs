@@ -28,7 +28,6 @@ import {
 
 import { sanitizeErrorMessage } from '../src/utils/errorSanitizer.js';
 import { getAccessToken, setAccessToken, clearAccessToken, hasAccessToken } from '../src/utils/tokenStorage.js';
-import { mockRegister, mockLogin, setMockEnabled, isMockEnabled } from '../src/mock/mockService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,11 +59,8 @@ function test(description, fn) {
 // ============================================================================
 console.log('\n--- [PROBE 1] Role Escalation & Privilege Boundary Tests ---');
 
-test('mockRegister strictly assigns "user" role regardless of input parameters', async () => {
-  setMockEnabled(true);
-  const user = await mockRegister('Attacker Name', `attacker_${Date.now()}@domain.com`, 'SecureP@ssw0rd!');
-  assert.strictEqual(user.success, true);
-  assert.strictEqual(user.data.role, 'user', 'Role must strictly be user');
+test('Mock directory src/mock is purged from production repository', () => {
+  assert(!fs.existsSync(path.join(rootDir, 'src/mock')), 'src/mock directory must not exist');
 });
 
 test('RegisterPage source code has no role selection or role payload', () => {

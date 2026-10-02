@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { Mail, AlertCircle, Loader2, CheckCircle, ShieldCheck, RotateCcw, Clock, ArrowLeft, KeyRound } from 'lucide-react';
+import { AlertCircle, Loader2, CheckCircle, ShieldCheck, RotateCcw, Clock, ArrowLeft } from 'lucide-react';
+import api from '../services/api';
+import { setAccessToken } from '../utils/tokenStorage';
 import { sanitizeErrorMessage } from '../utils/errorSanitizer';
 
 export default function VerifyOtpPage() {
@@ -16,16 +17,10 @@ export default function VerifyOtpPage() {
   const [rejectionReason, setRejectionReason] = useState('');
 
   const inputRefs = useRef([]);
-  const { verifyOtp, resendOtp, isDemo } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
   useEffect(() => {
-    if (isDemo) {
-      navigate('/');
-      return;
-    }
-
     const passedEmail = location.state?.email || sessionStorage.getItem('taskmanager_verify_email');
     if (passedEmail) {
       setEmail(passedEmail);
@@ -38,7 +33,7 @@ export default function VerifyOtpPage() {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
     }
-  }, [location, isDemo, navigate]);
+  }, [location]);
 
   // Resend cooldown timer
   useEffect(() => {
@@ -111,23 +106,29 @@ export default function VerifyOtpPage() {
 
     setIsSubmitting(true);
     try {
-      const result = await verifyOtp(email, otpCode);
-      if (result.success) {
-        if (result.approvalStatus === 'approved') {
-          setSuccessMsg('Verification successful! Access granted.');
-          setTimeout(() => navigate('/'), 1200);
-        } else if (result.approvalStatus === 'rejected') {
-          setApprovalState('rejected');
-          setRejectionReason(result.user?.rejectionReason || 'Access request was declined by the administrator.');
-        } else {
-          // Pending admin approval
-          setApprovalState('pending');
-        }
+      const response = await api.post('/auth/verify-otp', { email, otp: otpCode });
+      const payload = response.data?.data || response.data || {};
+
+      if (payload?.token) {
+        setAccessToken(payload.token);
+        try {
+          sessionStorage.setItem('taskmanager_auth_user_v1', JSON.stringify(payload.user || payload));
+        } catch {}
+      }
+
+      const approvalStatus = response.data?.approvalStatus || payload?.approvalStatus;
+
+      if (approvalStatus === 'approved') {
+        setSuccessMsg('Verification successful! Access granted.');
+        setTimeout(() => navigate('/'), 1200);
+      } else if (approvalStatus === 'rejected') {
+        setApprovalState('rejected');
+        setRejectionReason(payload?.rejectionReason || 'Access request was declined by the administrator.');
       } else {
-        setError(sanitizeErrorMessage(result.error, 'Invalid code. Please try again.'));
+        setApprovalState('pending');
       }
     } catch (err) {
-      setError(sanitizeErrorMessage(err, 'Verification failed.'));
+      setError(sanitizeErrorMessage(err, 'Verification failed. Please check the code.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -140,17 +141,13 @@ export default function VerifyOtpPage() {
     setIsResending(true);
 
     try {
-      const result = await resendOtp(email);
-      if (result.success) {
-        setSuccessMsg(result.message || 'New code sent to your email.');
-        setCountdown(60);
-        setOtp(['', '', '', '', '', '']);
-        inputRefs.current[0]?.focus();
-      } else {
-        setError(sanitizeErrorMessage(result.error, 'Failed to resend code.'));
-      }
+      const response = await api.post('/auth/resend-otp', { email });
+      setSuccessMsg(response.data?.message || 'New code sent to your email.');
+      setCountdown(60);
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
     } catch (err) {
-      setError(sanitizeErrorMessage(err, 'Failed to resend code.'));
+      setError(sanitizeErrorMessage(err, 'Failed to resend code. Please try again.'));
     } finally {
       setIsResending(false);
     }
@@ -261,23 +258,6 @@ export default function VerifyOtpPage() {
                   />
                 ))}
               </div>
-
-              {/* Demo Mode helper */}
-              {isDemo && (
-                <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-between text-xs text-amber-300">
-                  <div className="flex items-center space-x-1.5">
-                    <KeyRound className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>Demo Code: <strong className="font-mono text-white">123456</strong></span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setOtp(['1', '2', '3', '4', '5', '6'])}
-                    className="underline text-[11px] hover:text-white font-semibold"
-                  >
-                    Auto-Fill
-                  </button>
-                </div>
-              )}
 
               {/* Submit Verification Button */}
               <button

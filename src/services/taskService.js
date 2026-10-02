@@ -1,4 +1,4 @@
-import api from './api';
+import api from './api.js';
 
 export const getTasks = async (params) => {
   const response = await api.get('/tasks', { params });

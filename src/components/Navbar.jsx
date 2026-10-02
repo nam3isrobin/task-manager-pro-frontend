@@ -1,10 +1,10 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import NotificationDropdown from './NotificationDropdown';
-import { CheckSquare, LogOut, Zap, Shield } from 'lucide-react';
+import { CheckSquare, LogOut } from 'lucide-react';
 
 export default function Navbar() {
-  const { user, logout, isDemo } = useAuth();
+  const { user, logout } = useAuth();
 
   const getInitials = (name) => {
     if (!name) return 'U';
@@ -38,12 +38,6 @@ export default function Navbar() {
               <span className="text-lg sm:text-xl font-bold tracking-tight text-white">
                 Task Manager <span className="text-amber-400 font-semibold">Pro</span>
               </span>
-              {isDemo && (
-                <span className="hidden md:inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30 tracking-wide uppercase">
-                  <Zap className="w-2.5 h-2.5 mr-1" />
-                  Demo
-                </span>
-              )}
             </div>
           </div>
 
@@ -94,4 +88,3 @@ export default function Navbar() {
     </nav>
   );
 }
-
