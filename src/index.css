@@ -1,0 +1,635 @@
+/* =========================================================================
+   Midnight Glass — Global Design System
+   TaskManagerPro Frontend
+   ========================================================================= */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =========================================================================
+   1. DESIGN TOKENS — CSS Custom Properties
+   ========================================================================= */
+
+:root {
+  /* --- Navy / Background Scale ------------------------------------------ */
+  --navy-50:   #e8edf8;
+  --navy-100:  #c6d0ec;
+  --navy-200:  #9aabd9;
+  --navy-300:  #6d85c4;
+  --navy-400:  #4a67b5;
+  --navy-500:  #2d4ea3;
+  --navy-600:  #1e3a8a;
+  --navy-700:  #162d6e;
+  --navy-800:  #0d1f52;
+  --navy-900:  #0d1528;
+  --navy-950:  #0a0f1e;
+
+  /* --- Semantic Background Surfaces ------------------------------------- */
+  --bg-base:      #0a0f1e;
+  --bg-card:      #0d1528;
+  --bg-alt:       #111827;
+  --bg-overlay:   rgba(10, 15, 30, 0.85);
+  --bg-hover:     rgba(255, 255, 255, 0.04);
+  --bg-active:    rgba(255, 255, 255, 0.07);
+  --bg-input:     rgba(13, 21, 40, 0.80);
+
+  /* --- Amber / Gold Accent ---------------------------------------------- */
+  --amber-50:   #fffbeb;
+  --amber-100:  #fef3c7;
+  --amber-200:  #fde68a;
+  --amber-300:  #fcd34d;
+  --amber-400:  #fbbf24;
+  --amber-500:  #f59e0b;
+  --amber-600:  #d97706;
+  --amber-700:  #b45309;
+  --amber-800:  #92400e;
+  --amber-900:  #78350f;
+  --amber-950:  #451a03;
+
+  /* --- Indigo / Electric-Blue Secondary --------------------------------- */
+  --indigo-50:   #eef2ff;
+  --indigo-100:  #e0e7ff;
+  --indigo-200:  #c7d2fe;
+  --indigo-300:  #a5b4fc;
+  --indigo-400:  #818cf8;
+  --indigo-500:  #6366f1;
+  --indigo-600:  #4f46e5;
+  --indigo-700:  #4338ca;
+  --indigo-800:  #3730a3;
+  --indigo-900:  #312e81;
+  --indigo-950:  #1e1b4b;
+
+  /* --- Text Colors ------------------------------------------------------- */
+  --text-primary:    #f1f5f9;
+  --text-muted:      #94a3b8;
+  --text-faint:      #64748b;
+  --text-inverse:    #0a0f1e;
+  --text-accent:     #fbbf24;
+  --text-link:       #818cf8;
+  --text-link-hover: #a5b4fc;
+
+  /* --- Border Colors ----------------------------------------------------- */
+  --border-subtle:  rgba(255, 255, 255, 0.07);
+  --border-default: rgba(255, 255, 255, 0.10);
+  --border-strong:  rgba(255, 255, 255, 0.16);
+  --border-accent:  rgba(245, 158, 11, 0.35);
+  --border-focus:   rgba(99, 102, 241, 0.60);
+  --border-error:   rgba(248, 113, 113, 0.55);
+
+  /* --- Glass Recipe ------------------------------------------------------ */
+  --glass-bg:          rgba(13, 21, 40, 0.60);
+  --glass-bg-light:    rgba(255, 255, 255, 0.04);
+  --glass-blur:        12px;
+  --glass-blur-sm:     6px;
+  --glass-blur-lg:     24px;
+  --glass-border:      rgba(255, 255, 255, 0.10);
+  --glass-border-top:  rgba(255, 255, 255, 0.14);
+  --glass-shadow:      0 4px 24px rgba(0,0,0,0.50), inset 0 1px 0 rgba(255,255,255,0.08);
+  --glass-shadow-lg:   0 8px 40px rgba(0,0,0,0.60), inset 0 1px 0 rgba(255,255,255,0.10);
+  --glass-radius:      0.75rem;
+
+  /* --- Status Colors ----------------------------------------------------- */
+  --status-done-fg:           #10b981;
+  --status-done-bg:           rgba(6, 78, 59, 0.40);
+  --status-done-border:       rgba(16, 185, 129, 0.30);
+
+  --status-inprogress-fg:     #f59e0b;
+  --status-inprogress-bg:     rgba(69, 26, 3, 0.50);
+  --status-inprogress-border: rgba(245, 158, 11, 0.30);
+
+  --status-onhold-fg:         #8b5cf6;
+  --status-onhold-bg:         rgba(46, 16, 101, 0.45);
+  --status-onhold-border:     rgba(139, 92, 246, 0.30);
+
+  --status-todo-fg:           #94a3b8;
+  --status-todo-bg:           rgba(30, 41, 59, 0.50);
+  --status-todo-border:       rgba(148, 163, 184, 0.20);
+
+  --status-overdue-fg:        #f87171;
+  --status-overdue-bg:        rgba(69, 10, 10, 0.50);
+  --status-overdue-border:    rgba(248, 113, 113, 0.30);
+
+  /* --- Semantic Accent Shortcuts ---------------------------------------- */
+  --accent-primary:        var(--amber-500);
+  --accent-primary-hover:  var(--amber-400);
+  --accent-primary-press:  var(--amber-600);
+  --accent-secondary:      var(--indigo-500);
+  --accent-secondary-soft: var(--indigo-400);
+
+  /* --- Glow / Shadow ---------------------------------------------------- */
+  --glow-amber:  0 0 20px rgba(245,158,11,0.25), 0 0 40px rgba(245,158,11,0.12);
+  --glow-indigo: 0 0 20px rgba(99,102,241,0.25), 0 0 40px rgba(99,102,241,0.12);
+  --shadow-sm:   0 1px 3px rgba(0,0,0,0.40);
+  --shadow-md:   0 4px 12px rgba(0,0,0,0.50);
+  --shadow-lg:   0 8px 32px rgba(0,0,0,0.60);
+  --shadow-xl:   0 16px 64px rgba(0,0,0,0.70);
+
+  /* --- Transition Defaults ----------------------------------------------- */
+  --transition-fast:   80ms ease-out;
+  --transition-base:   150ms ease-out;
+  --transition-smooth: 200ms cubic-bezier(0.25, 1, 0.5, 1);
+  --transition-spring: 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  --transition-slow:   350ms ease-out;
+
+  /* --- Layout / Sizing -------------------------------------------------- */
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   0.75rem;
+  --radius-xl:   1rem;
+  --radius-full: 9999px;
+
+  --sidebar-width:            15rem;
+  --sidebar-width-collapsed:  3.5rem;
+  --header-height:            3.5rem;
+  --content-max-width:        80rem;
+}
+
+/* =========================================================================
+   2. GLOBAL RESETS & BASE
+   ========================================================================= */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scroll-behavior: smooth;
+  background-color: #060b18;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100vh;
+  background-color: #060b18;
+}
+
+/* =========================================================================
+   3. BODY — Animated Radial Background
+   ========================================================================= */
+
+body {
+  background-color: #060b18;
+  color: var(--text-primary);
+  font-family:
+    'Inter',
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
+  font-size: 0.875rem;
+  line-height: 1.375;
+  font-weight: 400;
+  letter-spacing: -0.005em;
+  min-height: 100dvh;
+  overflow-x: hidden;
+
+  /*
+   * Animated background:
+   *  Layer 1 — SVG fractal noise grain (very subtle texture)
+   *  Layer 2 — amber radial bloom (top-right)
+   *  Layer 3 — indigo radial bloom (bottom-left)
+   *  Layer 4 — navy center pulse
+   *  Layer 5 — base dark gradient
+   */
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse 80% 60% at 75% 10%,  rgba(245,158,11,0.07)  0%, transparent 65%),
+    radial-gradient(ellipse 70% 50% at 20% 90%,  rgba(99,102,241,0.08)  0%, transparent 60%),
+    radial-gradient(ellipse 100% 80% at 50% 50%, rgba(30,58,138,0.18)   0%, transparent 70%),
+    linear-gradient(160deg, #0a0f1e 0%, #0d1528 50%, #0a0f1e 100%);
+
+  background-size:
+    300px 300px,
+    auto,
+    auto,
+    auto,
+    200% 200%;
+
+  animation: bg-drift 24s ease-in-out infinite alternate;
+}
+
+@keyframes bg-drift {
+  0%   { background-position: 0 0, 75% 10%, 20% 90%, 50% 50%, 0%   50%; }
+  33%  { background-position: 0 0, 80% 15%, 15% 85%, 55% 45%, 30%  60%; }
+  66%  { background-position: 0 0, 70%  8%, 25% 95%, 45% 55%, 60%  40%; }
+  100% { background-position: 0 0, 78% 12%, 18% 88%, 52% 48%, 100% 50%; }
+}
+
+/* =========================================================================
+   4. SCROLLBAR STYLING — Dark Theme
+   ========================================================================= */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.10);
+  border-radius: var(--radius-full);
+  transition: background var(--transition-base);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.20);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.10) transparent;
+}
+
+/* =========================================================================
+   5. TEXT SELECTION
+   ========================================================================= */
+
+::selection {
+  background-color: rgba(99, 102, 241, 0.35);
+  color: #f1f5f9;
+}
+::-moz-selection {
+  background-color: rgba(99, 102, 241, 0.35);
+  color: #f1f5f9;
+}
+
+/* =========================================================================
+   6. GLOBAL FORM CONTROLS — Dark inputs, amber focus ring
+   ========================================================================= */
+
+input,
+textarea,
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  padding: 0.5rem 0.75rem;
+  font-family: inherit;
+  font-size: 0.875rem;
+  line-height: 1.375;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    background-color var(--transition-base);
+  outline: none;
+  width: 100%;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-faint);
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 0 1px var(--amber-500);
+  background-color: rgba(13, 21, 40, 0.95);
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  border-color: var(--amber-500);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.18), 0 0 0 1px var(--amber-500);
+}
+
+input:disabled,
+textarea:disabled,
+select:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background-color: rgba(13, 21, 40, 0.50);
+}
+
+/* Error state */
+input[aria-invalid="true"],
+textarea[aria-invalid="true"],
+select[aria-invalid="true"],
+input.error,
+textarea.error,
+select.error {
+  border-color: rgba(248, 113, 113, 0.70);
+  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.12);
+}
+
+/* Custom select arrow */
+select {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  padding-right: 2.25rem;
+  cursor: pointer;
+}
+
+select option {
+  background-color: #0d1528;
+  color: #f1f5f9;
+}
+
+/* Checkbox & Radio */
+input[type="checkbox"],
+input[type="radio"] {
+  width: 1rem;
+  height: 1rem;
+  padding: 0;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: var(--amber-500);
+  border: 1px solid var(--border-default);
+  border-radius: 0.2rem;
+}
+input[type="radio"] {
+  border-radius: var(--radius-full);
+}
+
+/* Range */
+input[type="range"] {
+  padding: 0;
+  border: none;
+  background: transparent;
+  accent-color: var(--amber-500);
+  cursor: pointer;
+}
+input[type="range"]:focus {
+  box-shadow: none;
+  border-color: transparent;
+}
+
+/* =========================================================================
+   7. BUTTON BASE
+   ========================================================================= */
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  transition: var(--transition-base);
+}
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* =========================================================================
+   8. TYPOGRAPHY BASE
+   ========================================================================= */
+
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+p {
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+
+a {
+  color: var(--text-link);
+  text-decoration: none;
+  transition: color var(--transition-base);
+}
+a:hover {
+  color: var(--text-link-hover);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+code, kbd, samp {
+  font-family: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-size: 0.82em;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.1em 0.35em;
+}
+
+hr {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 1.5rem 0;
+}
+
+/* =========================================================================
+   9. COMPONENT UTILITIES (@layer components)
+   ========================================================================= */
+
+@layer components {
+
+  /* Glass Card ------------------------------------------------------------ */
+  .glass-card {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    border-top-color: var(--glass-border-top);
+    border-radius: var(--glass-radius);
+    box-shadow: var(--glass-shadow);
+  }
+
+  .glass-card-sm {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur-sm));
+    -webkit-backdrop-filter: blur(var(--glass-blur-sm));
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .glass-card-lg {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur-lg));
+    -webkit-backdrop-filter: blur(var(--glass-blur-lg));
+    border: 1px solid var(--glass-border);
+    border-top-color: var(--glass-border-top);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glass-shadow-lg);
+  }
+
+  /* Frosted sidebar/tray panel ------------------------------------------- */
+  .glass-panel {
+    background: rgba(13, 21, 40, 0.75);
+    backdrop-filter: blur(20px) saturate(1.4);
+    -webkit-backdrop-filter: blur(20px) saturate(1.4);
+    border-right: 1px solid var(--border-subtle);
+  }
+
+  /* Focus Ring (indigo — keyboard nav) ----------------------------------- */
+  .focus-ring {
+    outline: none;
+  }
+  .focus-ring:focus-visible {
+    outline: 2px solid var(--indigo-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+  }
+
+  /* Focus Ring (amber — CTA / primary actions) --------------------------- */
+  .focus-ring-amber {
+    outline: none;
+  }
+  .focus-ring-amber:focus-visible {
+    outline: 2px solid var(--amber-500);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+    box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+  }
+
+  /* Status Badge Base ---------------------------------------------------- */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    border-radius: var(--radius-full);
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .badge-done       { color: var(--status-done-fg);       background: var(--status-done-bg);       border-color: var(--status-done-border); }
+  .badge-inprogress { color: var(--status-inprogress-fg); background: var(--status-inprogress-bg); border-color: var(--status-inprogress-border); }
+  .badge-onhold     { color: var(--status-onhold-fg);     background: var(--status-onhold-bg);     border-color: var(--status-onhold-border); }
+  .badge-todo       { color: var(--status-todo-fg);       background: var(--status-todo-bg);       border-color: var(--status-todo-border); }
+  .badge-overdue    { color: var(--status-overdue-fg);    background: var(--status-overdue-bg);    border-color: var(--status-overdue-border); }
+
+  /* Shimmer Skeleton ----------------------------------------------------- */
+  .skeleton {
+    background: linear-gradient(
+      90deg,
+      rgba(255,255,255,0.04) 25%,
+      rgba(255,255,255,0.08) 50%,
+      rgba(255,255,255,0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.8s linear infinite;
+    border-radius: var(--radius-md);
+  }
+
+  /* Amber CTA Button ----------------------------------------------------- */
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 1rem;
+    background-color: var(--amber-500);
+    color: var(--text-inverse);
+    font-weight: 600;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition:
+      background-color var(--transition-base),
+      box-shadow var(--transition-base),
+      transform 80ms ease-out;
+    user-select: none;
+  }
+  .btn-primary:hover        { background-color: var(--amber-400); box-shadow: var(--glow-amber); }
+  .btn-primary:active       { background-color: var(--amber-600); transform: scale(0.98); }
+  .btn-primary:focus-visible { outline: 2px solid var(--amber-400); outline-offset: 2px; }
+
+  /* Ghost Button --------------------------------------------------------- */
+  .btn-ghost {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    padding: 0.5rem 0.875rem;
+    background-color: transparent;
+    color: var(--text-muted);
+    font-weight: 500;
+    font-size: 0.875rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+    transition:
+      background-color var(--transition-base),
+      color var(--transition-base),
+      border-color var(--transition-base);
+    user-select: none;
+  }
+  .btn-ghost:hover        { background-color: var(--bg-hover); color: var(--text-primary); border-color: var(--border-strong); }
+  .btn-ghost:focus-visible { outline: 2px solid var(--indigo-500); outline-offset: 2px; }
+
+  /* Divider -------------------------------------------------------------- */
+  .divider {
+    width: 100%;
+    height: 1px;
+    background: var(--border-subtle);
+  }
+}
+
+/* =========================================================================
+   10. UTILITY OVERRIDES (@layer utilities)
+   ========================================================================= */
+
+@layer utilities {
+  .scrollbar-gutter  { scrollbar-gutter: stable; }
+  .truncate-safe     { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .text-glow-amber   { text-shadow: 0 0 12px rgba(245,158,11,0.50); }
+  .text-glow-indigo  { text-shadow: 0 0 12px rgba(99,102,241,0.50); }
+  .inset-shine       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.10); }
+  .gpu               { transform: translateZ(0); will-change: transform; }
+  .animate-shake     { animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+  .animate-fade-in   { animation: fadeIn 0.22s ease-out both; }
+}
+
+/* =========================================================================
+   11. KEYFRAME ANIMATIONS
+   ========================================================================= */
+
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  15%, 45%, 75% {
+    transform: translateX(-6px);
+  }
+  30%, 60%, 90% {
+    transform: translateX(6px);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
